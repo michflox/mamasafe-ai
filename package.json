@@ -1,0 +1,24 @@
+{
+  "name": "mamasafe-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MamaSafe AI — offline-first clinical emergency copilot (PPH MVP). Synthetic data only; not cleared for clinical use.",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @mamasafe/web",
+    "build": "npm run build -w @mamasafe/web",
+    "test": "vitest run",
+    "typecheck": "tsc -b tsconfig.base.json --noEmit false"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

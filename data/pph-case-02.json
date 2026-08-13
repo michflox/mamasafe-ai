@@ -1,0 +1,121 @@
+{
+  "case_id": "pph-case-02",
+  "synthetic": true,
+  "title": "Mild primary PPH from uterine atony, stable vitals — responds to first-response bundle",
+  "scenario_note": "Milder atony case: EBL ~650 mL, warning-band physiology absent, full resources available at a secondary hospital. Tests that the engine activates the pathway at the 500 mL threshold without over-escalating, sequences the first-response bundle correctly, and does not recommend transfer when the patient is stable and responsive to initial measures. SYNTHETIC DATA ONLY.",
+  "input": {
+    "patient": {
+      "age_years": 26,
+      "parity": 1,
+      "gestational_age_weeks": 38,
+      "postpartum": true,
+      "mode_of_birth": "vaginal",
+      "minutes_since_birth": 50,
+      "weight_kg": 70
+    },
+    "vitals": {
+      "heart_rate_bpm": 98,
+      "systolic_bp_mmHg": 118,
+      "diastolic_bp_mmHg": 72,
+      "respiratory_rate_per_min": 18,
+      "spo2_percent": 98,
+      "temperature_celsius": 36.8,
+      "mental_status": "alert"
+    },
+    "bleeding": {
+      "ongoing": true,
+      "estimated_blood_loss_ml": 650,
+      "bleeding_character": "steady trickle, no large clots",
+      "uterine_tone": "soft (partially boggy)",
+      "placenta_delivered": true,
+      "placenta_appears_complete": true,
+      "visible_lacerations": "small first-degree perineal tear, not actively bleeding"
+    },
+    "obstetric_history": {
+      "hypertensive_disorder": false,
+      "asthma": false,
+      "previous_pph": false,
+      "anticoagulants": false
+    },
+    "medications_already_given": [
+      {"medication": "oxytocin", "dose": "10 IU", "route": "IM", "minutes_ago": 45, "context": "pph_prevention_amtsl"}
+    ],
+    "resources": {
+      "iv_access": [{"type": "peripheral", "gauge": 18, "site": "right forearm", "patent": true}],
+      "medications_available": ["oxytocin", "misoprostol", "tranexamic_acid", "ergometrine", "carbetocin"],
+      "medications_unavailable": [],
+      "blood_products_available": true,
+      "nasg_available": true,
+      "balloon_tamponade_kit_available": true,
+      "facility_tier": "secondary_hospital",
+      "referral_minutes_away": null,
+      "referral_facility_capability": "on-site surgery and blood bank"
+    },
+    "free_text_intake": "Blood loss about 650 mL since delivery 50 minutes ago. Uterus feels soft. Vitals stable. Small tear present but not bleeding."
+  },
+  "expected_outputs": {
+    "shock_index": {
+      "value": 0.83,
+      "computation": "98 / 118 = 0.831",
+      "band": "normal",
+      "citation_ids": ["FIGO-2022-PPH"]
+    },
+    "risk_category": "pph_mild_atony_stable",
+    "risk_rationale": [
+      "EBL 650 mL >= 500 mL after vaginal birth = PPH (activate pathway)",
+      "Shock index 0.83 in normal obstetric range; no red vital signs",
+      "EBL < 1000 mL and hemodynamically stable = mild/minor PPH (RCOG minor 500-1000 mL)",
+      "Uterine atony is the most likely 4T cause (soft uterus); laceration not bleeding"
+    ],
+    "red_flags": [
+      "pph_threshold_met_650ml",
+      "uterine_atony_partial"
+    ],
+    "missing_info": [
+      "time_of_birth_exact (TXA window verification — ~50 min given, well inside 3 h; confirm clock time)",
+      "quantified_blood_loss_method (visual estimate vs gravimetric)"
+    ],
+    "first_5_prioritized_actions": [
+      {
+        "rank": 1,
+        "action_id": "call_for_help",
+        "action": "Notify team and assign roles (PPH diagnosed); begin timed response and quantitative blood-loss tracking.",
+        "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+      },
+      {
+        "rank": 2,
+        "action_id": "uterine_massage",
+        "action": "Uterine (fundal) massage — uterus soft; stimulate contraction and reassess tone.",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 3,
+        "action_id": "uterotonic_first_line",
+        "action": "Oxytocin 10 IU IM or IV SLOW (treatment dose; first-line uterotonic). Never rapid IV push.",
+        "medication_ref": "oxytocin",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 4,
+        "action_id": "tranexamic_acid",
+        "action": "Tranexamic acid 1 g (100 mg/mL) IV over 10 minutes — within 3 h of birth.",
+        "medication_ref": "tranexamic_acid",
+        "citation_ids": ["WHO-2017-TXA", "WOMAN-2017", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 5,
+        "action_id": "iv_access_and_fluids",
+        "action": "Confirm patent IV access and start isotonic crystalloid infusion; monitor vitals and blood loss every 5-15 minutes.",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      }
+    ],
+    "blocked_or_flagged": [
+      {"item": "transfer", "status": "not_indicated_now", "note": "Stable vitals, full resources on site, SI normal — do NOT over-escalate; reassess after first-response bundle. Escalate only if bleeding continues 15-30 min after bundle (esc-refractory-bundle) or SI crosses 0.9."},
+      {"item": "ergometrine", "status": "permitted_if_needed", "note": "BP 118/72 documented and no hypertensive disorder — gate G4 passes; reserve for second line if oxytocin fails."}
+    ],
+    "escalation_expected": {
+      "trigger_id": null,
+      "action": "No immediate transfer. Continue monitoring per pathway; if bleeding persists 15-30 minutes after first-response bundle, activate refractory bundle on site (secondary hospital has full resources)."
+    }
+  }
+}

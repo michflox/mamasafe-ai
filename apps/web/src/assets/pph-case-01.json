@@ -1,0 +1,132 @@
+{
+  "case_id": "pph-case-01",
+  "synthetic": true,
+  "title": "Severe primary PPH with hemorrhagic shock — PHC with uterotonics and TXA, no blood products",
+  "scenario_note": "Implements the FOUNDER_BRIEF MVP demonstration case: 29-year-old immediately postpartum, HR 124, BP 88/52, ongoing bleeding, EBL 1,100 mL, weakness/dizziness — extended with uterine tone, IV access, available medications, and blood-product availability fields. SYNTHETIC DATA ONLY.",
+  "input": {
+    "patient": {
+      "age_years": 29,
+      "parity": 2,
+      "gestational_age_weeks": 39,
+      "postpartum": true,
+      "mode_of_birth": "vaginal",
+      "minutes_since_birth": 35,
+      "weight_kg": 65
+    },
+    "vitals": {
+      "heart_rate_bpm": 124,
+      "systolic_bp_mmHg": 88,
+      "diastolic_bp_mmHg": 52,
+      "respiratory_rate_per_min": 26,
+      "spo2_percent": 96,
+      "temperature_celsius": 36.4,
+      "mental_status": "weak and dizzy, still responsive to voice"
+    },
+    "bleeding": {
+      "ongoing": true,
+      "estimated_blood_loss_ml": 1100,
+      "bleeding_character": "continuous trickle with clots",
+      "uterine_tone": "boggy",
+      "placenta_delivered": true,
+      "placenta_appears_complete": true,
+      "visible_lacerations": "not yet inspected"
+    },
+    "obstetric_history": {
+      "hypertensive_disorder": false,
+      "asthma": false,
+      "previous_pph": false,
+      "anticoagulants": false
+    },
+    "medications_already_given": [
+      {"medication": "oxytocin", "dose": "10 IU", "route": "IM", "minutes_ago": 30, "context": "pph_prevention_amtsl"}
+    ],
+    "resources": {
+      "iv_access": [{"type": "peripheral", "gauge": 18, "site": "left forearm", "patent": true}],
+      "medications_available": ["oxytocin", "misoprostol", "tranexamic_acid"],
+      "medications_unavailable": ["ergometrine", "carbetocin", "carboprost"],
+      "blood_products_available": false,
+      "nasg_available": true,
+      "balloon_tamponade_kit_available": false,
+      "facility_tier": "phc_with_midrugs",
+      "referral_minutes_away": 45,
+      "referral_facility_capability": "secondary hospital with surgery and blood bank"
+    },
+    "free_text_intake": "Mama just deliver 35 minutes ago. She dey bleed steady, EBL around 1100 mL. Belle soft (boggy). She say she dey weak and dizzy. BP 88/52, pulse 124."
+  },
+  "expected_outputs": {
+    "shock_index": {
+      "value": 1.41,
+      "computation": "124 / 88 = 1.409",
+      "band": "critical",
+      "citation_ids": ["NATHAN-2019-AOGS", "FIGO-2022-PPH"]
+    },
+    "risk_category": "severe_pph_hemorrhagic_shock",
+    "risk_rationale": [
+      "EBL 1,100 mL >= 1,000 mL = severe PPH (WHO 2012 / RCOG)",
+      "Shock index 1.41 in critical band (>= 1.3) = hemorrhagic shock physiology",
+      "SBP 88 < 90 with HR 124 > 120 = red vital-sign ranges",
+      "Symptomatic hypovolemia (weakness, dizziness) with ongoing bleeding",
+      "Uterine atony (boggy uterus) = most likely 4T cause (Tone)"
+    ],
+    "red_flags": [
+      "shock_index_critical_1.41",
+      "severe_pph_ebl_1100ml",
+      "systolic_bp_below_90",
+      "heart_rate_above_120",
+      "symptomatic_hypovolemia_weakness_dizziness",
+      "ongoing_bleeding_despite_prophylactic_oxytocin",
+      "no_blood_products_on_site",
+      "uterine_atony_suspected"
+    ],
+    "missing_info": [
+      "time_of_birth_exact (needed to verify TXA 3-hour window — minutes_since_birth given as approximate; confirm clock time)",
+      "genital_tract_trauma_assessment (laceration inspection not yet performed — 4T Trauma)",
+      "urine_output (perfusion monitoring baseline)",
+      "second_iv_access_status (large-bore access for resuscitation)",
+      "receiving_facility_alerted (referral activation status)"
+    ],
+    "first_5_prioritized_actions": [
+      {
+        "rank": 1,
+        "action_id": "call_for_help",
+        "action": "Call for help / activate PPH emergency: summon additional staff, alert referral hospital and arrange transport NOW (45 min away), assign team lead and timekeeper.",
+        "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+      },
+      {
+        "rank": 2,
+        "action_id": "uterine_massage",
+        "action": "Uterine (fundal) massage now — uterus is boggy (atony); reassess tone every 5 minutes.",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 3,
+        "action_id": "uterotonic_first_line",
+        "action": "Oxytocin 10 IU IM or IV SLOW (first-line uterotonic; prophylactic dose already given — repeat treatment dose per pathway). Never rapid IV push.",
+        "medication_ref": "oxytocin",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 4,
+        "action_id": "tranexamic_acid",
+        "action": "Tranexamic acid 1 g (100 mg/mL) IV over 10 minutes — patient is ~35 min post-birth, inside the 3-hour window (confirm exact time of birth).",
+        "medication_ref": "tranexamic_acid",
+        "citation_ids": ["WHO-2017-TXA", "WOMAN-2017", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 5,
+        "action_id": "iv_access_and_fluids",
+        "action": "Establish second large-bore IV and begin warmed isotonic crystalloid resuscitation in parallel; apply NASG as temporizing measure and prepare for immediate transfer (no blood products on site, SI critical).",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "FIGO-2015-NASG"]
+      }
+    ],
+    "blocked_or_flagged": [
+      {"item": "ergometrine", "status": "unavailable_on_site", "note": "Would additionally require documented non-hypertensive BP before any recommendation (gate G4)."},
+      {"item": "nasg_contraindications", "status": "flag_for_clinician_review", "note": "NASG device-level contraindication list is UNVERIFIED in data v1 — senior clinician confirms before application."}
+    ],
+    "escalation_expected": {
+      "trigger_id": "esc-critical-shock",
+      "action": "Immediate transfer to secondary hospital (surgery + blood bank) with NASG applied and resuscitation ongoing en route; do not wait for deterioration.",
+      "citation_ids": ["FIGO-2022-PPH", "NATHAN-2019-AOGS"]
+    }
+  }
+}

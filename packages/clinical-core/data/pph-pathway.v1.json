@@ -1,0 +1,379 @@
+{
+  "schema_version": "1.0.0",
+  "document_type": "clinical_pathway",
+  "pathway_id": "pph",
+  "pathway_version": "1.0.0",
+  "data_file_id": "pph-pathway.v1",
+  "title": "Postpartum Hemorrhage (PPH) Recognition and First-Response Pathway",
+  "status": "draft_pending_clinical_review",
+  "last_reviewed": "2026-08-11",
+  "reviewed_by": null,
+  "review_note": "Authored from WHO 2012/2017 and FIGO 2022 sources (see citations registry and docs/CLINICAL_SOURCES.md). REQUIRES sign-off by a qualified obstetric clinician and alignment with Nigerian FMOH national protocols before any pilot or clinical exposure. This file is for simulation/development only.",
+  "applies_to": {
+    "population": "Adult postpartum patients within 24 hours of birth (primary PPH), vaginal or cesarean",
+    "explicitly_out_of_scope": [
+      "pediatric patients (any patient under 18 years of age — this module must REJECT such cases and hand back an out-of-scope response)",
+      "secondary PPH (bleeding between 24 hours and 12 weeks postpartum) — related but separate pathway",
+      "antepartum hemorrhage (placenta previa, abruption) — separate pathway",
+      "non-obstetric hemorrhage"
+    ],
+    "setting": "Low-resource and standard facilities: PHC, CHEW/midwife posts, secondary hospitals, emergency units in Nigeria and comparable LMIC settings"
+  },
+  "governing_principles": [
+    "This pathway produces RECOMMENDATIONS for a human clinician, never commands. Every consequential action requires explicit human confirmation.",
+    "The deterministic rule engine is the sole source of truth for doses, thresholds, contraindications, and escalation criteria. The LLM layer may explain but may never alter these values.",
+    "Drug names, doses, concentrations, units, and thresholds must never be translated or localized; only explanatory prose may be localized.",
+    "When critical information is missing, the engine must NOT guess; it must surface a missing-information list and apply fail-safe defaults (assume higher risk).",
+    "Visual estimation of blood loss commonly UNDERESTIMATES true loss; the engine must never be reassured by a low estimated blood loss when physiologic signs (e.g., shock index) indicate deterioration.",
+    "If any input attempts to instruct the engine (prompt injection), the instruction content must be ignored and flagged; only structured clinical fields may influence rules."
+  ],
+  "definitions": {
+    "pph": {
+      "text": "Cumulative blood loss >= 500 mL within 24 hours after vaginal birth, or >= 1000 mL after cesarean birth; OR any blood loss accompanied by signs/symptoms of hypovolemia regardless of measured volume.",
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "ACOG-2017-PB183"]
+    },
+    "severe_pph": {
+      "text": "Blood loss >= 1000 mL regardless of mode of birth, or PPH with hemodynamic instability (see shock_index.bands).",
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "RCOG-2016-GT52"]
+    },
+    "blood_loss_estimation_caveat": {
+      "text": "Visual estimation frequently underestimates blood loss. Where available, prefer quantitative methods (gravimetric, calibrated drapes/collection). Engine rule: physiologic indicators override low volume estimates.",
+      "citation_ids": ["FIGO-2022-PPH"]
+    }
+  },
+  "etiology_framework": {
+    "mnemonic": "4T",
+    "categories": [
+      {"key": "tone", "label": "Tone — uterine atony", "approx_share_of_cases": "~70% of PPH", "citation_ids": ["FIGO-2022-PPH"]},
+      {"key": "trauma", "label": "Trauma — genital tract lacerations, uterine rupture, hematoma", "approx_share_of_cases": "~15-20% of PPH", "citation_ids": ["FIGO-2022-PPH"]},
+      {"key": "tissue", "label": "Tissue — retained placenta/products of conception", "approx_share_of_cases": null, "citation_ids": ["FIGO-2022-PPH"]},
+      {"key": "thrombin", "label": "Thrombin — coagulopathy (e.g., DIC after abruption, severe preeclampsia, sepsis)", "approx_share_of_cases": null, "citation_ids": ["FIGO-2022-PPH"]}
+    ],
+    "engine_rule": "At pathway activation, prompt for assessment of each 4T cause. Atony treatment must not delay identification and treatment of trauma/tissue causes; if bleeding persists despite a firm, contracted uterus, actively look for lacerations, retained tissue, or coagulopathy."
+  },
+  "shock_index": {
+    "definition": "shock_index = heart_rate_bpm / systolic_bp_mmHg",
+    "normal_obstetric_range": [0.7, 0.9],
+    "normal_note": "Standard obstetric shock index is ~0.7-0.9 (vs 0.5-0.7 in non-pregnant adults); pregnancy physiology delays classic vital-sign changes until large volume is lost.",
+    "bands": [
+      {
+        "band": "normal",
+        "range": [null, 0.9],
+        "meaning": "No hemodynamic alert from shock index. Does not exclude PPH; interpret with blood loss and clinical signs.",
+        "engine_action": "continue_monitoring",
+        "citation_ids": ["FIGO-2022-PPH"]
+      },
+      {
+        "band": "warning",
+        "range": [0.9, 1.3],
+        "meaning": "Hemodynamic alert. Associated with increased mortality risk; in community/PHC settings should trigger urgent escalation and preparation for transfer.",
+        "engine_action": "trigger_warning_alert_and_urgent_escalation",
+        "citation_ids": ["FIGO-2022-PPH", "NATHAN-2015-BJOG"]
+      },
+      {
+        "band": "critical",
+        "range": [1.3, null],
+        "meaning": "Critical hemodynamic compromise; high likelihood of need for transfusion and advanced intervention. Treat as hemorrhagic shock until proven otherwise.",
+        "engine_action": "trigger_critical_alert_immediate_escalation_and_referral",
+        "citation_ids": ["NATHAN-2019-AOGS", "NATHAN-2018-BMJINNOV"]
+      }
+    ],
+    "notes": [
+      "FIGO 2022 explicitly endorses SI >= 0.9 as the alert threshold (Box 2). The 1.3 critical band derives from the CRADLE Vital Signs Alert program (Nathan et al. 2015/2018/2019); the engine may make this threshold configurable by policy but must not set it lower than the FIGO 0.9 alert.",
+      "SI >= 0.9 has been proposed as the threshold to alert community providers of the need for URGENT TRANSFER."
+    ],
+    "citation_ids": ["FIGO-2022-PPH", "NATHAN-2015-BJOG", "NATHAN-2018-BMJINNOV", "NATHAN-2019-AOGS"]
+  },
+  "recognition_criteria": {
+    "activate_pathway_when_any": [
+      {"criterion": "cumulative_blood_loss_ml >= 500 after vaginal birth", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]},
+      {"criterion": "cumulative_blood_loss_ml >= 1000 after cesarean birth", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]},
+      {"criterion": "shock_index >= 0.9", "citation_ids": ["FIGO-2022-PPH"]},
+      {"criterion": "any blood loss with signs of hypovolemia (e.g., HR > 120, SBP < 90, altered mental status, oliguria, pallor, dizziness/syncope)", "citation_ids": ["ACOG-2017-PB183", "FIGO-2022-PPH"]},
+      {"criterion": "clinician judgment: ongoing heavy vaginal bleeding post-birth even without measured volume", "citation_ids": ["FIGO-2022-PPH"]}
+    ],
+    "fail_safe_default": "If vital signs or blood loss data are missing but postpartum bleeding is reported, activate the pathway and mark severity as 'indeterminate — assume worst case until assessed'."
+  },
+  "first_response_bundle": {
+    "source": "WHO technical consultation on PPH care bundles (Althabe et al. 2020), endorsed in FIGO 2022",
+    "components": ["uterotonic_drugs", "isotonic_crystalloids", "tranexamic_acid", "uterine_massage"],
+    "implementation_note": "IV fluid resuscitation is started together with IV uterotonics. If IV uterotonics are unavailable, start fluids in parallel with sublingual misoprostol or other parenteral uterotonics. If retained placenta: extract placenta and give a single dose of antibiotics. If lacerations: repair.",
+    "citation_ids": ["ALTHABE-2020-BUNDLE", "FIGO-2022-PPH"]
+  },
+  "action_sequence": [
+    {
+      "step": 1,
+      "id": "call_for_help",
+      "action": "Call for help / activate PPH emergency: summon additional staff, alert referral facility and transport if facility cannot manage, assign a team lead and a scribe/timekeeper. Begin timing the response (time of birth, time of diagnosis).",
+      "priority": "immediate",
+      "parallel": true,
+      "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+    },
+    {
+      "step": 2,
+      "id": "assess_abc_and_4t",
+      "action": "Rapid structured assessment: airway/breathing/circulation; assess uterine tone (atony?), inspect for genital tract trauma, assess placental completeness (retained tissue?), consider coagulopathy (4T framework). Measure and record blood loss continuously.",
+      "priority": "immediate",
+      "parallel": true,
+      "citation_ids": ["FIGO-2022-PPH"]
+    },
+    {
+      "step": 3,
+      "id": "uterine_massage",
+      "action": "Uterine (fundal) massage to stimulate contraction for PPH treatment (recommended for treatment of PPH; note: sustained massage is NOT recommended as prevention in women who received prophylactic oxytocin).",
+      "priority": "immediate",
+      "parallel": true,
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+    },
+    {
+      "step": 4,
+      "id": "uterotonic_first_line",
+      "action": "First-line uterotonic: oxytocin 10 IU IM or IV slow (intravenous oxytocin alone is the recommended first-line uterotonic for treatment of PPH). See medications.v1.json#oxytocin for administration and safety notes. Never administer oxytocin as rapid IV push (hypotension risk).",
+      "medication_ref": "oxytocin",
+      "priority": "immediate",
+      "parallel": true,
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+    },
+    {
+      "step": 5,
+      "id": "tranexamic_acid",
+      "action": "Tranexamic acid 1 g (100 mg/mL) IV over 10 minutes (1 mL/min) as soon as PPH is diagnosed AND within 3 hours of birth. Second dose of 1 g IV if bleeding continues after 30 minutes or restarts within 24 hours of the first dose. The 3-hour window is measured from TIME OF BIRTH, not from diagnosis.",
+      "medication_ref": "tranexamic_acid",
+      "priority": "immediate",
+      "parallel": true,
+      "time_window": "within_3h_of_birth",
+      "citation_ids": ["WHO-2017-TXA", "FIGO-2022-PPH", "WOMAN-2017"]
+    },
+    {
+      "step": 6,
+      "id": "iv_access_and_fluids",
+      "action": "Establish/maintain IV access (at least one large-bore line; two where possible) and begin isotonic crystalloid resuscitation. Isotonic crystalloids are recommended IN PREFERENCE to colloids. Warm fluids if possible. See fluid_resuscitation section.",
+      "priority": "immediate",
+      "parallel": true,
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+    },
+    {
+      "step": 7,
+      "id": "uterotonic_second_line",
+      "action": "If bleeding does not respond to oxytocin or oxytocin is unavailable: misoprostol 800 micrograms sublingual; OR ergometrine/methylergometrine 200 micrograms IM/IV ONLY IF hypertension/preeclampsia safely excluded (CONTRAINDICATED in hypertensive disorders); OR oxytocin-ergometrine fixed-dose combination (same hypertension contraindication). Where available, heat-stable carbetocin 100 micrograms IM/IV is an alternative uterotonic. Check medications.v1.json contraindication gates BEFORE any ergot alkaloid.",
+      "medication_refs": ["misoprostol", "ergometrine", "carbetocin"],
+      "priority": "within_15_minutes_if_unresponsive",
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "WHO-2018-UTEROTONICS"]
+    },
+    {
+      "step": 8,
+      "id": "treat_the_cause",
+      "action": "Treat the identified 4T cause in parallel: repair lacerations; remove retained placenta/tissue (give single-dose antibiotics if manual removal); if uterus is contracted but bleeding continues, escalate search for trauma/coagulopathy rather than repeating uterotonics.",
+      "priority": "continuous",
+      "citation_ids": ["ALTHABE-2020-BUNDLE", "FIGO-2022-PPH"]
+    },
+    {
+      "step": 9,
+      "id": "temporizing_measures",
+      "action": "Temporizing measures while definitive care/transfer is arranged: bimanual uterine compression or external aortic compression (for atony after vaginal birth); apply non-pneumatic anti-shock garment (NASG) as a temporizing measure; uterine balloon tamponade if uterotonics fail or are unavailable (only after retained products and uterine rupture are ruled out). Uterine PACKING is NOT recommended.",
+      "priority": "if_refractory",
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "FIGO-2015-NASG"]
+    },
+    {
+      "step": 10,
+      "id": "escalate_definitive_care",
+      "action": "Escalate to definitive care: urgent transfer to facility with surgical and blood transfusion capability. Surgical options at capable facilities: uterine balloon tamponade, compression sutures, uterine/hypogastric artery ligation, uterine artery embolization (where available), hysterectomy as last resort. Priority: stop bleeding BEFORE coagulopathy and organ under-perfusion develop.",
+      "priority": "do_not_delay",
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+    }
+  ],
+  "fluid_resuscitation": {
+    "first_line": "Isotonic crystalloids (e.g., 0.9% sodium chloride or Ringer's lactate), warmed if possible.",
+    "preference_rule": "Isotonic crystalloids are recommended in preference to colloids for initial IV fluid resuscitation in PPH (strong recommendation, low-quality evidence — WHO 2012).",
+    "practical_guidance": [
+      "Infuse rapidly while uterotonics and TXA are being given; fluid resuscitation runs in PARALLEL, not after drugs.",
+      "Do not delay fluid resuscitation while awaiting uterotonic effect.",
+      "RCOG-aligned volume discipline: up to ~2 L isotonic crystalloid (and not more than ~1.5 L colloid if used, ~3.5 L total clear fluids) before escalating to blood products; ongoing bleeding beyond this requires blood-based resuscitation, not more clear fluid.",
+      "Avoid aggressive over-resuscitation: consider hypotensive (permissive) resuscitation principles — target perfusion (mental status, urine output) rather than normal blood pressure until bleeding is controlled.",
+      "Monitor for signs of fluid overload; reassess after each liter."
+    ],
+    "targets": {
+      "mental_status": "responsive/appropriate",
+      "urine_output_ml_per_kg_per_h": ">= 0.5",
+      "systolic_bp_mmHg_floor": "maintain >= 80-90 pending hemorrhage control (permissive hypotension concept; do NOT chase normal BP with excessive crystalloid)",
+      "citation_note": "Targets derive from RCOG/FIGO resuscitation guidance; exact numeric BP target is a policy parameter, not a universal guideline constant."
+    },
+    "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "RCOG-2016-GT52"]
+  },
+  "transfusion": {
+    "principles": [
+      "There is no single universal hemoglobin trigger endorsed by WHO/FIGO; transfusion decisions integrate ongoing bleeding, hemodynamic status, and estimated/expected loss.",
+      "Transfuse EARLY when: hemodynamic instability persists despite initial crystalloid + uterotonics + TXA; shock index in critical band; ongoing uncontrolled bleeding; or EBL already >= 1000-1500 mL with continued bleeding.",
+      "RCOG-aligned practice: use packed red cells to restore oxygen-carrying capacity and maintain hemoglobin > 8 g/dL during/after major hemorrhage.",
+      "Where blood is unavailable: apply NASG, use temporizing compression, expedite transfer — do not wait for deterioration.",
+      "Activate massive transfusion protocol where available (balanced ratios of red cells, plasma, platelets; fibrinogen/cryoprecipitate support) — FIGO 2022 section 11 (hemostatic resuscitation)."
+    ],
+    "trigger_rules": [
+      {"id": "tx-1", "condition": "shock_index >= 1.3 OR (SBP < 90 AND HR > 120) persisting after initial measures", "recommendation": "urgent blood transfusion where available; if unavailable, immediate transfer with NASG/temporizing measures", "citation_ids": ["FIGO-2022-PPH", "NATHAN-2019-AOGS"]},
+      {"id": "tx-2", "condition": "cumulative EBL >= 1500 mL with ongoing bleeding", "recommendation": "anticipate coagulopathy; prepare blood products and massive transfusion capability; transfer if not available", "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]},
+      {"id": "tx-3", "condition": "hemoglobin < 7 g/dL (if measurable) OR < 8 g/dL with ongoing bleeding or instability", "recommendation": "transfuse to maintain Hb > 8 g/dL during major hemorrhage (RCOG-aligned)", "citation_ids": ["RCOG-2016-GT52"]}
+    ],
+    "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+  },
+  "mechanical_and_surgical_options": {
+    "nasg": {
+      "name": "Non-pneumatic anti-shock garment (NASG)",
+      "role": "Temporizing measure for hypovolemic shock secondary to obstetric hemorrhage until definitive care is available; useful during transport.",
+      "key_points": ["Apply per device instructions with monitoring", "Removal only under controlled conditions with IV access and monitoring, gradually, with re-assessment between segments", "Does not replace hemorrhage control, fluids, or blood"],
+      "contraindications_note": "See medications/devices review: specific device-level contraindications (e.g., bleeding source above the diaphragm, severe heart failure) require clinical review; verify against FIGO 2022 section 9.1.7 before pilot. Flagged UNVERIFIED in docs/CLINICAL_SOURCES.md.",
+      "citation_ids": ["FIGO-2015-NASG", "FIGO-2022-PPH"]
+    },
+    "uterine_balloon_tamponade": {
+      "role": "Recommended nonsurgical technique when uterotonics fail or are unavailable, AFTER ruling out retained products of conception and uterine rupture.",
+      "key_points": ["Condon-catheter or purpose-built balloon devices acceptable in low-resource settings", "Document insertion time, fill volume, and drainage", "Combine with continued uterotonics and second TXA dose per refractory bundle"],
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+    },
+    "not_recommended": [
+      {"intervention": "uterine packing (gauze packing) for atony after vaginal birth", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]}
+    ],
+    "surgical_escalation_at_capable_facility": [
+      "uterine compression sutures (e.g., B-Lynch)",
+      "uterine artery ligation",
+      "bilateral internal iliac (hypogastric) artery ligation",
+      "uterine artery embolization where interventional radiology exists",
+      "hysterectomy — last resort, do not delay when indicated"
+    ]
+  },
+  "escalation": {
+    "philosophy": "Escalate EARLY. In low-resource settings, diagnosis, treatment, and referral must begin earlier than in hospital settings; transport time is part of the treatment timeline.",
+    "triggers": [
+      {"id": "esc-1", "level": "urgent_transfer_alert", "condition": "shock_index >= 0.9 in a community/PHC setting", "action": "Alert receiving facility and arrange URGENT transfer; begin first-response bundle immediately; do not wait for transfer to start treatment", "citation_ids": ["FIGO-2022-PPH", "NATHAN-2015-BJOG"]},
+      {"id": "esc-2", "level": "immediate_transfer", "condition": "shock_index >= 1.3, OR SBP < 90 with HR > 120, OR altered mental status attributable to hypovolemia", "action": "Hemorrhagic shock: immediate transfer to surgical/transfusion-capable facility with temporizing measures (NASG/compression) and ongoing resuscitation en route", "citation_ids": ["FIGO-2022-PPH", "NATHAN-2019-AOGS"]},
+      {"id": "esc-3", "level": "escalate_within_facility", "condition": "bleeding continues ~15-30 minutes after first-response bundle completed", "action": "Move to refractory-PPH bundle (compression measures, balloon tamponade, NASG, second TXA dose, continued uterotonics) and call most senior available clinician", "citation_ids": ["ALTHABE-2020-BUNDLE", "FIGO-2022-PPH"]},
+      {"id": "esc-4", "level": "surgical_escalation", "condition": "bleeding uncontrolled despite uterotonics + conservative measures", "action": "Surgical interventions recommended; if facility cannot perform them, transfer immediately — the priority is stopping bleeding before coagulopathy and organ damage", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]},
+      {"id": "esc-5", "level": "resource_gap_override", "condition": "required resource unavailable (no uterotonics, no blood products, no surgical capability) with ongoing PPH", "action": "Do not wait: apply temporizing measures and transfer to nearest capable facility; document the resource gap in the referral note", "citation_ids": ["FIGO-2022-PPH"]}
+    ]
+  },
+  "monitoring": {
+    "during_active_hemorrhage": [
+      {"parameter": "HR, BP (compute shock index each measurement), RR, SpO2", "frequency": "every 5 minutes", "citation_ids": ["RCOG-2016-GT52"]},
+      {"parameter": "cumulative blood loss (quantify where possible)", "frequency": "continuous", "citation_ids": ["FIGO-2022-PPH"]},
+      {"parameter": "mental status, urine output (catheterize when feasible)", "frequency": "every 15 minutes", "citation_ids": ["RCOG-2016-GT52"]},
+      {"parameter": "uterine tone and response to each intervention", "frequency": "with each intervention and every 5-15 minutes", "citation_ids": ["WHO-2012-PPH"]}
+    ],
+    "after_stabilization": [
+      {"parameter": "full vital signs set", "frequency": "every 15 minutes for 2 hours, then every 30 minutes for at least 2-4 hours, then per obstetric early-warning policy", "citation_ids": ["RCOG-2016-GT52", "WHO-2012-PPH"]},
+      {"parameter": "uterine tone/fundal palpation (atony surveillance)", "frequency": "with vital signs", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]},
+      {"parameter": "lochia/ongoing loss, urine output, hemoglobin/coagulation where available", "frequency": "each observation round; labs at earliest opportunity", "citation_ids": ["RCOG-2016-GT52"]},
+      {"parameter": "watch for late complications: coagulopathy, transfusion reactions, fluid overload, renal hypoperfusion", "frequency": "continuous vigilance", "citation_ids": ["FIGO-2022-PPH"]}
+    ],
+    "note": "Exact observation frequencies are a facility policy parameter; the schedule above is RCOG/WHO-aligned. An obstetric early-warning chart (MEOWS/IMEWS-style) should drive ongoing surveillance — see thresholds.v1.json."
+  },
+  "resource_tier_adaptations": {
+    "community_or_home_birth_no_iv": {
+      "available": ["uterine massage", "bimanual/aortic compression", "misoprostol 800 micrograms SL (if in kit)", "NASG where supplied"],
+      "rule": "Start what is available IMMEDIATELY and trigger urgent transfer (esc-1). Do not attempt interventions outside training."
+    },
+    "phc_with_midrugs": {
+      "available": ["oxytocin", "misoprostol", "TXA (where stocked)", "isotonic crystalloids", "compression measures", "NASG"],
+      "rule": "Complete first-response bundle; if no response in 15-30 min or SI >= 1.3, transfer with temporizing measures running."
+    },
+    "secondary_hospital": {
+      "available": ["full uterotonic set", "TXA", "blood transfusion (variable)", "balloon tamponade", "basic surgery"],
+      "rule": "Full pathway including refractory bundle; transfuse early; escalate to surgery without delay if bleeding uncontrolled."
+    }
+  },
+  "citations": {
+    "WHO-2012-PPH": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations for the prevention and treatment of postpartum haemorrhage",
+      "year": 2012,
+      "sections_used": ["Definitions", "Treatment recommendations: uterotonics, uterine massage, balloon tamponade, fluid resuscitation (isotonic crystalloids over colloids), temporizing measures, surgical interventions"],
+      "url": "https://iris.who.int/bitstream/handle/10665/75411/9789241548502_eng.pdf?sequence=1",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2017-TXA": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendation on tranexamic acid for the treatment of postpartum haemorrhage",
+      "year": 2017,
+      "sections_used": ["TXA 1 g IV within 3 h of birth; dosing and repeat-dose rule; 3-hour window anchored to time of birth"],
+      "url": "https://www.who.int/reproductivehealth/publications/tranexamic-acid-pph-treatment/en/",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2018-UTEROTONICS": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations: uterotonics for the prevention of postpartum haemorrhage",
+      "year": 2018,
+      "sections_used": ["Oxytocin 10 IU first line; carbetocin (heat-stable), ergot alkaloids, misoprostol alternatives; hypertension contraindication context"],
+      "url": "https://iris.who.int/handle/10665/277276",
+      "date_reviewed": "2026-08-11"
+    },
+    "FIGO-2022-PPH": {
+      "organization": "International Federation of Gynecology and Obstetrics (FIGO), Safe Motherhood and Newborn Health Committee",
+      "title": "FIGO recommendations on the management of postpartum hemorrhage 2022 (Escobar MF et al., Int J Gynaecol Obstet 2022;157 Suppl 1:3-50)",
+      "year": 2022,
+      "sections_used": ["Section 2 recommendations", "Section 3.3 definitions", "Section 3.4 etiology (4T)", "Section 4 bundle care", "Section 5 shock index (Box 2: SI >= 0.9 alert)", "Section 7 carbetocin vs oxytocin", "Section 8 TXA", "Section 9 NASG/UBT", "Section 10 surgical treatment", "Section 11 assessment and resuscitation"],
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9313855/",
+      "date_reviewed": "2026-08-11"
+    },
+    "FIGO-2015-NASG": {
+      "organization": "FIGO Safe Motherhood and Newborn Health Committee",
+      "title": "Non-pneumatic anti-shock garment to stabilize women with hypovolemic shock secondary to obstetric hemorrhage (Int J Gynaecol Obstet 2015;128:194-195)",
+      "year": 2015,
+      "sections_used": ["NASG as stabilization/temporizing measure"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/25637000/",
+      "date_reviewed": "2026-08-11"
+    },
+    "WOMAN-2017": {
+      "organization": "WOMAN Trial Collaborators",
+      "title": "Effect of early tranexamic acid administration on mortality, hysterectomy, and other morbidities in women with post-partum haemorrhage (WOMAN): an international, randomised, double-blind, placebo-controlled trial. Lancet 2017;389:2105-2116",
+      "year": 2017,
+      "sections_used": ["Evidence base for TXA dosing and 3-hour window"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28456509/",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2015-BJOG": {
+      "organization": "Nathan HL et al. (King's College London / UCSF Safe Motherhood)",
+      "title": "Shock index: an effective predictor of outcome in postpartum haemorrhage? BJOG 2015;122:268-275",
+      "year": 2015,
+      "sections_used": ["SI >= 0.9 alert threshold for low-resource settings; SI predicts adverse outcomes better than conventional vital signs"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/25546050/",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2018-BMJINNOV": {
+      "organization": "Nathan HL et al.",
+      "title": "Development and evaluation of a novel Vital Signs Alert device for use in pregnancy in low-resource settings. BMJ Innovations 2018;4:192-198",
+      "year": 2018,
+      "sections_used": ["Traffic-light alert concept: amber at SI >= 0.9, red at SI >= 1.3"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30397523/",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2019-AOGS": {
+      "organization": "Nathan HL et al.",
+      "title": "Shock index thresholds to predict adverse outcomes in maternal hemorrhage and sepsis: a prospective cohort study. Acta Obstet Gynecol Scand 2019;98:1178-1186",
+      "year": 2019,
+      "sections_used": ["Prospective validation of SI thresholds including the 1.3 critical threshold"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30927469/",
+      "date_reviewed": "2026-08-11"
+    },
+    "RCOG-2016-GT52": {
+      "organization": "Royal College of Obstetricians and Gynaecologists",
+      "title": "Prevention and management of postpartum haemorrhage. Green-top Guideline No. 52 (BJOG 2017;124:e106-e149)",
+      "year": 2016,
+      "sections_used": ["Minor/major PPH classification (mild 500-1000, moderate 1000-2000, severe >2000 mL)", "Fluid volume discipline (~2 L crystalloid / 1.5 L colloid / 3.5 L total before blood)", "Hb > 8 g/dL target", "Monitoring cadence", "Massive transfusion concepts"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27981719/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ACOG-2017-PB183": {
+      "organization": "American College of Obstetricians and Gynecologists",
+      "title": "ACOG Practice Bulletin No. 183: Postpartum Hemorrhage (Obstet Gynecol 2017;130:e168-e186)",
+      "year": 2017,
+      "sections_used": ["Definition: cumulative blood loss >= 1000 mL OR bleeding with signs/symptoms of hypovolemia within 24 h regardless of delivery route"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28937571/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ALTHABE-2020-BUNDLE": {
+      "organization": "WHO technical consultation (Althabe F et al.)",
+      "title": "Postpartum hemorrhage care bundles to improve adherence to guidelines: a WHO technical consultation. Int J Gynaecol Obstet 2020;148:290-299",
+      "year": 2020,
+      "sections_used": ["First response PPH bundle (uterotonics, isotonic crystalloids, TXA, uterine massage)", "Response to refractory PPH bundle (compression measures, UBT, NASG, continued uterotonics, second TXA dose)"],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31222831/",
+      "date_reviewed": "2026-08-11"
+    }
+  }
+}

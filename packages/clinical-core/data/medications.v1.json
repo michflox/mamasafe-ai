@@ -1,0 +1,277 @@
+{
+  "schema_version": "1.0.0",
+  "document_type": "medication_library",
+  "library_id": "mamasafe-obstetric-medications",
+  "library_version": "1.0.0",
+  "data_file_id": "medications.v1",
+  "status": "draft_pending_clinical_review",
+  "last_reviewed": "2026-08-11",
+  "reviewed_by": null,
+  "review_note": "Doses and contraindications are guideline-derived (WHO 2012/2017/2018, FIGO 2022, WOMAN 2017). REQUIRES pharmacist/obstetric clinician sign-off and reconciliation against Nigerian FMOH essential-medicines guidance and local formulary before any pilot. Simulation/development use only.",
+  "global_rules": {
+    "translation_safety": "DRUG NAMES, DOSES, CONCENTRATIONS, UNITS, and ROUTES must NEVER be translated, transliterated, paraphrased, or localized. The engine and UI must render the canonical English/generic name plus fixed numeric dosing strings in every language. Only explanatory prose may be localized.",
+    "human_confirmation": "Every medication recommendation requires explicit human confirmation by a qualified clinician before administration. The engine recommends; it never commands.",
+    "scope_guard": "All entries in this file are for ADULT postpartum patients only. Any request involving a patient under 18 years of age must be rejected as out of scope for this module (pediatric dosing belongs to a future, separately validated module).",
+    "unit_policy": "Units are written in full with SI symbols: micrograms (µg; ASCII-safe alias 'mcg' accepted on input, normalized to 'µg' internally), IU (international units), g, mg, mL. The engine must reject ambiguous unit-free dosing.",
+    "contraindication_gate": "Before recommending any drug with a conditional contraindication, the engine MUST check the relevant patient field. If the field is missing, the engine must request it or exclude the drug from recommendations — it must not silently assume the contraindication is absent."
+  },
+  "medications": [
+    {
+      "id": "oxytocin",
+      "canonical_name": "oxytocin",
+      "drug_class": "uterotonic (oxytocic)",
+      "indications_in_pathway": ["first-line uterotonic for PPH treatment", "first-line uterotonic for PPH prevention (active management of third stage)"],
+      "doses": [
+        {
+          "context": "pph_treatment_first_line",
+          "dose": "10 IU",
+          "route": "IM, or IV slow",
+          "administration_notes": "Intravenous oxytocin alone is the recommended first-line uterotonic for treatment of PPH. NEVER give as rapid IV push/bolus — rapid IV administration can cause hypotension, tachycardia, and cardiovascular collapse. If IV: give slowly; if IM: standard deltoid/gluteal administration.",
+          "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+        },
+        {
+          "context": "pph_prevention_amtsl",
+          "dose": "10 IU",
+          "route": "IM or IV",
+          "administration_notes": "Recommended for prevention of PPH for all births (vaginal and cesarean) as part of active management of the third stage. Maintain cold chain; degraded oxytocin is a known quality problem in low-resource settings.",
+          "citation_ids": ["WHO-2012-PPH", "WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+        },
+        {
+          "context": "maintenance_infusion_during_resuscitation",
+          "dose": "10-40 IU in 500-1000 mL isotonic crystalloid, titrated to uterine response (e.g., 40 IU in 500 mL infused over ~4 hours)",
+          "route": "IV infusion",
+          "administration_notes": "Continuing uterotonic infusion is part of the refractory-PPH bundle. Infusion concentration/rate is a facility policy parameter within the cited range; engine must display the chosen regimen for clinician confirmation, not auto-select silently.",
+          "citation_ids": ["ALTHABE-2020-BUNDLE", "RCOG-2016-GT52"]
+        }
+      ],
+      "max_dose": {
+        "treatment_bolus": "No fixed cumulative IU cap in WHO/FIGO PPH guidance; escalate to second-line uterotonics rather than endlessly repeating boluses. Any per-facility cap must come from local protocol.",
+        "flag": "Engine must reject single-dose recommendations above 10 IU bolus-equivalent and must reject rapid IV push at ANY dose."
+      },
+      "contraindications": [
+        {"condition": "hypersensitivity to oxytocin", "type": "absolute"},
+        {"condition": "rapid IV push administration", "type": "route_hazard", "note": "Administration-route hazard, not a patient condition — engine blocks this route regardless of patient factors."}
+      ],
+      "cautions": ["Hypotension with rapid IV administration", "Water intoxication/hyponatremia with large volumes of hypotonic fluid coadministration", "Cold-chain failure may render product ineffective — verify storage history where possible"],
+      "monitoring": ["uterine tone response", "blood pressure", "heart rate"],
+      "translation_lock": true,
+      "citation_ids": ["WHO-2012-PPH", "WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+    },
+    {
+      "id": "tranexamic_acid",
+      "canonical_name": "tranexamic acid",
+      "drug_class": "antifibrinolytic",
+      "indications_in_pathway": ["adjunct to standard care for clinically diagnosed PPH (vaginal or cesarean), as early as possible and within 3 hours of birth"],
+      "doses": [
+        {
+          "context": "pph_treatment",
+          "dose": "1 g (100 mg/mL) IV at 1 mL/min — i.e., administered over 10 minutes",
+          "route": "IV (slow injection over 10 minutes)",
+          "repeat_rule": "Second dose of 1 g IV if bleeding continues after 30 minutes, or if bleeding stops and restarts within 24 hours of completing the first dose.",
+          "time_window": "Must be given within 3 hours of BIRTH. The 3-hour window is measured from the time of birth, NOT from the time PPH is diagnosed. If time of birth is unknown, the engine must flag the window as unverifiable rather than assume eligibility.",
+          "administration_notes": "Give as soon as PPH is diagnosed; benefit declines with delay. Do not exceed 1 mL/min infusion rate (hypotension risk with rapid injection).",
+          "citation_ids": ["WHO-2017-TXA", "FIGO-2022-PPH", "WOMAN-2017"]
+        }
+      ],
+      "max_dose": {"pph_context": "2 g total (two 1 g doses) per WHO 2017 / FIGO 2022 regimen. Engine must reject single doses > 1 g and total > 2 doses in 24 h for this indication."},
+      "contraindications": [
+        {"condition": "active thromboembolic disease (e.g., current DVT/PE)", "type": "absolute", "citation_ids": ["FIGO-2022-PPH"]},
+        {"condition": "known hypersensitivity to tranexamic acid", "type": "absolute"}
+      ],
+      "cautions": [
+        "History of thromboembolic disease or strong thrombophilia — clinician judgment required",
+        "Renal impairment — dose adjustment may be required (not detailed in PPH guideline dosing; flag for clinical review)",
+        "Rapid IV injection can cause hypotension — observe 10-minute administration time"
+      ],
+      "monitoring": ["bleeding response at 30 minutes (decides second dose)", "blood pressure during administration"],
+      "translation_lock": true,
+      "citation_ids": ["WHO-2017-TXA", "WOMAN-2017", "FIGO-2022-PPH"]
+    },
+    {
+      "id": "misoprostol",
+      "canonical_name": "misoprostol",
+      "drug_class": "uterotonic (prostaglandin E1 analog)",
+      "indications_in_pathway": ["second-line uterotonic for PPH treatment when oxytocin unavailable or bleeding unresponsive", "PPH prevention where oxytocin unavailable (community settings)"],
+      "doses": [
+        {
+          "context": "pph_treatment",
+          "dose": "800 µg",
+          "route": "sublingual",
+          "administration_notes": "Recommended prostaglandin option for PPH treatment when IV oxytocin is unavailable or bleeding does not respond to oxytocin.",
+          "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+        },
+        {
+          "context": "pph_prevention_community",
+          "dose": "400-600 µg",
+          "route": "oral",
+          "administration_notes": "For prevention where injectable uterotonics are unavailable or no skilled birth attendant present (community/lay health worker administration supported).",
+          "citation_ids": ["FIGO-2022-PPH", "WHO-2018-UTEROTONICS"]
+        }
+      ],
+      "max_dose": {
+        "rule": "FIGO 2022: there is NO evidence on safety/efficacy of an additional 800 µg treatment dose in women who already received 600 µg prophylactic oral misoprostol. Engine must FLAG (not silently permit) a treatment-dose recommendation when prophylactic misoprostol 600 µg was already given; recommend an alternative second-line agent instead.",
+        "citation_ids": ["FIGO-2022-PPH"]
+      },
+      "contraindications": [
+        {"condition": "hypersensitivity to prostaglandins", "type": "absolute"}
+      ],
+      "cautions": ["Fever and shivering are common and usually transient — counsel accordingly", "Diarrhea, nausea", "Do not confuse sublingual (treatment) and oral (prevention) routes and doses"],
+      "monitoring": ["uterine tone response", "temperature", "continued bleeding"],
+      "translation_lock": true,
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "WHO-2018-UTEROTONICS"]
+    },
+    {
+      "id": "ergometrine",
+      "canonical_name": "ergometrine (methylergometrine)",
+      "drug_class": "uterotonic (ergot alkaloid)",
+      "indications_in_pathway": ["second-line uterotonic for PPH treatment when oxytocin unavailable or bleeding unresponsive", "prevention where oxytocin unavailable and hypertensive disorders safely excluded"],
+      "doses": [
+        {
+          "context": "pph_treatment_or_prevention",
+          "dose": "200 µg",
+          "route": "IM, or IV (slow)",
+          "administration_notes": "May be given as ergometrine alone or as fixed-dose oxytocin-ergometrine combination. Check contraindication gate FIRST.",
+          "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+        }
+      ],
+      "max_dose": {"rule": "Single 200 µg dose per guideline recommendation; repeat dosing per facility protocol only. Engine must reject doses > 200 µg per administration."},
+      "contraindications": [
+        {
+          "condition": "hypertension, preeclampsia/eclampsia, or any hypertensive disorder of pregnancy",
+          "type": "absolute",
+          "gate_rule": "REQUIRED PRE-ADMINISTRATION CHECK: the engine must confirm a documented, non-hypertensive blood pressure BEFORE recommending any ergot alkaloid. If BP is missing or elevated (SBP >= 140 or DBP >= 90), the engine MUST NOT recommend ergometrine/oxytocin-ergometrine and must offer misoprostol as the alternative second-line agent. If the patient has known preeclampsia/hypertension, the drug is hard-blocked.",
+          "citation_ids": ["WHO-2012-PPH", "WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+        },
+        {"condition": "cardiac disease, peripheral vascular disease", "type": "strong_relative", "note": "Requires senior clinical judgment; flag prominently."},
+        {"condition": "hypersensitivity to ergot alkaloids", "type": "absolute"}
+      ],
+      "cautions": ["Causes hypertension and vomiting as common adverse effects", "Vasoconstriction — caution with any cardiovascular compromise"],
+      "monitoring": ["blood pressure after administration", "uterine tone response"],
+      "translation_lock": true,
+      "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "WHO-2018-UTEROTONICS"]
+    },
+    {
+      "id": "carbetocin",
+      "canonical_name": "carbetocin (heat-stable formulation)",
+      "drug_class": "uterotonic (long-acting oxytocin analog)",
+      "indications_in_pathway": ["alternative uterotonic where available (especially where oxytocin cold chain cannot be guaranteed); prevention of PPH"],
+      "doses": [
+        {
+          "context": "pph_prevention_alternative",
+          "dose": "100 µg",
+          "route": "IM or IV",
+          "administration_notes": "Heat-stable formulation does not require cold chain — a key advantage in low-resource settings. WHO 2018 recommends carbetocin where its cost is comparable to other effective uterotonics.",
+          "citation_ids": ["WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+        }
+      ],
+      "max_dose": {"rule": "100 µg single dose per guideline recommendation. Engine must reject doses > 100 µg."},
+      "contraindications": [
+        {"condition": "hypersensitivity to carbetocin or oxytocin", "type": "absolute"}
+      ],
+      "cautions": ["Evidence base strongest for PREVENTION; for treatment, oxytocin remains first-line per WHO/FIGO", "Availability and cost limit use in many LMIC facilities"],
+      "monitoring": ["uterine tone response", "blood pressure", "heart rate"],
+      "translation_lock": true,
+      "citation_ids": ["WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+    },
+    {
+      "id": "carboprost",
+      "canonical_name": "carboprost tromethamine (15-methyl prostaglandin F2alpha)",
+      "drug_class": "uterotonic (prostaglandin F2alpha analog)",
+      "indications_in_pathway": ["second/third-line uterotonic for PPH due to uterine atony where available (primarily facility-level stock)"],
+      "doses": [
+        {
+          "context": "pph_treatment_refractory_atony",
+          "dose": "250 µg",
+          "route": "IM (intramyometrial only by experienced clinicians)",
+          "repeat_rule": "May be repeated at intervals of not less than 15 minutes per clinical judgment; total dose should not exceed 2 mg (8 doses).",
+          "administration_notes": "Not in WHO essential first/second-line LMIC sequence but standard in facility-level hemorrhage carts (ACOG/RCOG-aligned). Include only when facility stocks it.",
+          "citation_ids": ["ACOG-2017-PB183", "RCOG-2016-GT52"]
+        }
+      ],
+      "max_dose": {"rule": "2 mg total (8 x 250 µg doses). Engine must reject cumulative doses above 2 mg and single doses above 250 µg.", "citation_ids": ["ACOG-2017-PB183"]},
+      "contraindications": [
+        {
+          "condition": "asthma (active or significant history)",
+          "type": "absolute",
+          "gate_rule": "REQUIRED PRE-ADMINISTRATION CHECK: engine must confirm absence of asthma before recommending carboprost. If asthma status is unknown, the engine must request it or exclude carboprost from recommendations.",
+          "citation_ids": ["ACOG-2017-PB183"]
+        },
+        {"condition": "hypersensitivity to prostaglandins", "type": "absolute"}
+      ],
+      "cautions": ["Bronchospasm risk", "Fever, diarrhea, nausea, vomiting, flushing are common", "Caution in hepatic, renal, cardiac disease"],
+      "monitoring": ["respiratory status", "uterine tone response", "blood pressure"],
+      "translation_lock": true,
+      "citation_ids": ["ACOG-2017-PB183", "RCOG-2016-GT52"]
+    }
+  ],
+  "explicitly_not_included": [
+    {
+      "item": "pediatric dosing of any drug",
+      "reason": "Out of scope for the maternal/obstetric module. Pediatric medication calculations belong to a future separately validated Pediatric Emergency module. Any pediatric dosing request must be rejected with an out-of-scope response.",
+      "citation_ids": []
+    },
+    {
+      "item": "drug name translation/localization",
+      "reason": "Safety rule: medication names, doses, concentrations, and units are never translated.",
+      "citation_ids": []
+    }
+  ],
+  "citations": {
+    "WHO-2012-PPH": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations for the prevention and treatment of postpartum haemorrhage",
+      "year": 2012,
+      "url": "https://iris.who.int/bitstream/handle/10665/75411/9789241548502_eng.pdf?sequence=1",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2017-TXA": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendation on tranexamic acid for the treatment of postpartum haemorrhage",
+      "year": 2017,
+      "url": "https://www.who.int/reproductivehealth/publications/tranexamic-acid-pph-treatment/en/",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2018-UTEROTONICS": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations: uterotonics for the prevention of postpartum haemorrhage",
+      "year": 2018,
+      "url": "https://iris.who.int/handle/10665/277276",
+      "date_reviewed": "2026-08-11"
+    },
+    "FIGO-2022-PPH": {
+      "organization": "International Federation of Gynecology and Obstetrics",
+      "title": "FIGO recommendations on the management of postpartum hemorrhage 2022 (Int J Gynaecol Obstet 2022;157 Suppl 1:3-50)",
+      "year": 2022,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9313855/",
+      "date_reviewed": "2026-08-11"
+    },
+    "WOMAN-2017": {
+      "organization": "WOMAN Trial Collaborators",
+      "title": "Effect of early tranexamic acid administration on mortality, hysterectomy, and other morbidities in women with post-partum haemorrhage (WOMAN). Lancet 2017;389:2105-2116",
+      "year": 2017,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28456509/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ACOG-2017-PB183": {
+      "organization": "American College of Obstetricians and Gynecologists",
+      "title": "ACOG Practice Bulletin No. 183: Postpartum Hemorrhage (Obstet Gynecol 2017;130:e168-e186)",
+      "year": 2017,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28937571/",
+      "date_reviewed": "2026-08-11"
+    },
+    "RCOG-2016-GT52": {
+      "organization": "Royal College of Obstetricians and Gynaecologists",
+      "title": "Prevention and management of postpartum haemorrhage. Green-top Guideline No. 52 (BJOG 2017;124:e106-e149)",
+      "year": 2016,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27981719/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ALTHABE-2020-BUNDLE": {
+      "organization": "WHO technical consultation",
+      "title": "Postpartum hemorrhage care bundles to improve adherence to guidelines: a WHO technical consultation (Althabe F et al., Int J Gynaecol Obstet 2020;148:290-299)",
+      "year": 2020,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31222831/",
+      "date_reviewed": "2026-08-11"
+    }
+  }
+}

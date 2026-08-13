@@ -1,0 +1,264 @@
+{
+  "schema_version": "1.0.0",
+  "document_type": "threshold_library",
+  "library_id": "mamasafe-obstetric-thresholds",
+  "library_version": "1.0.0",
+  "data_file_id": "thresholds.v1",
+  "status": "draft_pending_clinical_review",
+  "last_reviewed": "2026-08-11",
+  "reviewed_by": null,
+  "review_note": "Vital-sign danger ranges and escalation thresholds for adult obstetric patients. Shock-index values are guideline/literature-derived and verified (see citation_ids). MEOWS/IMEWS-style band tables are included as a CONFIGURABLE starting parameter set — the primary IMEWS/NCEC chart could not be retrieved during authoring; those band values are marked verification_status='requires_clinical_review' and must be confirmed against the national chart in use at deployment sites before pilot.",
+  "scope": {
+    "population": "Adult pregnant and postpartum patients",
+    "out_of_scope": "Neonatal and pediatric vital-sign ranges (future Pediatric Emergency module; do not reuse these ranges for children)"
+  },
+  "shock_index": {
+    "formula": "heart_rate_bpm / systolic_bp_mmHg",
+    "input_validation": {
+      "reject_if": ["heart_rate_bpm <= 0", "systolic_bp_mmHg <= 0", "heart_rate_bpm missing", "systolic_bp_mmHg missing"],
+      "on_reject": "Do not compute. Return missing-information flag; never estimate or impute vitals."
+    },
+    "normal_obstetric_range": [0.7, 0.9],
+    "bands": [
+      {
+        "band": "normal",
+        "min_exclusive": null,
+        "max_exclusive": 0.9,
+        "alert_level": 0,
+        "meaning": "No shock-index alert. Does not exclude hemorrhage; interpret with blood loss and symptoms.",
+        "verification_status": "verified",
+        "citation_ids": ["FIGO-2022-PPH"]
+      },
+      {
+        "band": "warning",
+        "min_inclusive": 0.9,
+        "max_exclusive": 1.3,
+        "alert_level": 1,
+        "meaning": "Warning: hemodynamic alert. In community/PHC settings, treat as trigger for urgent escalation and transfer preparation. Associated with increased mortality risk.",
+        "verification_status": "verified",
+        "citation_ids": ["FIGO-2022-PPH", "NATHAN-2015-BJOG"]
+      },
+      {
+        "band": "critical",
+        "min_inclusive": 1.3,
+        "max_exclusive": null,
+        "alert_level": 2,
+        "meaning": "Critical: hemorrhagic shock until proven otherwise. High likelihood of transfusion requirement and need for advanced intervention. Immediate escalation and referral.",
+        "verification_status": "verified",
+        "citation_ids": ["NATHAN-2019-AOGS", "NATHAN-2018-BMJINNOV"]
+      }
+    ],
+    "config_note": "Thresholds are policy-configurable but may never be set LESS sensitive than the FIGO 0.9 alert (e.g., a policy may add an intermediate band at 1.1 but may not raise the warning threshold above 0.9)."
+  },
+  "vital_sign_danger_ranges": {
+    "note": "Red ranges demand immediate clinician attention and pathway escalation when combined with bleeding. Amber ranges trigger enhanced monitoring. These are obstetric-specific (pregnancy physiology blunts early changes).",
+    "parameters": [
+      {
+        "parameter": "systolic_bp_mmHg",
+        "red_low": 90,
+        "amber_low": [90, 99],
+        "amber_high": [150, 159],
+        "red_high": 160,
+        "red_high_note": "Red-high BP indicates possible severe hypertensive disorder — triggers severe preeclampsia pathway evaluation AND hard-blocks ergot alkaloids in PPH context.",
+        "verification_status": "verified (low ranges: FIGO 2022 hypovolemia signs; high ranges: standard severe-range obstetric hypertension cutoffs — confirm against deployment-site chart)",
+        "citation_ids": ["FIGO-2022-PPH", "ACOG-2017-PB183"]
+      },
+      {
+        "parameter": "diastolic_bp_mmHg",
+        "red_low": null,
+        "amber_low": null,
+        "amber_high": [100, 109],
+        "red_high": 110,
+        "red_high_note": "DBP >= 110 = severe-range hypertension; same preeclampsia-pathway trigger and ergot-alkaloid block.",
+        "verification_status": "verified (severe-range cutoffs standard across obstetric hypertension guidelines — confirm against deployment-site chart)",
+        "citation_ids": ["ACOG-2017-PB183"]
+      },
+      {
+        "parameter": "heart_rate_bpm",
+        "red_low": 40,
+        "amber_low": [40, 49],
+        "amber_high": [100, 120],
+        "red_high": 120,
+        "red_high_note": "HR > 120 with bleeding is a hypovolemia red flag even if BP is preserved (pregnancy compensation). Always interpret with shock index.",
+        "verification_status": "verified (HR > 120 cited as hypovolemia sign in FIGO 2022 / ACOG PB 183; amber bands require chart confirmation)",
+        "citation_ids": ["FIGO-2022-PPH", "ACOG-2017-PB183"]
+      },
+      {
+        "parameter": "respiratory_rate_per_min",
+        "red_low": 10,
+        "amber_low": [10, 11],
+        "amber_high": [21, 29],
+        "red_high": 30,
+        "red_high_note": "Tachypnea out of proportion may indicate shock, acidosis, sepsis, or pulmonary edema (e.g., fluid overload, magnesium context).",
+        "verification_status": "requires_clinical_review",
+        "citation_ids": ["IMEWS-UNVERIFIED"]
+      },
+      {
+        "parameter": "spo2_percent",
+        "red_low": 92,
+        "amber_low": [92, 94],
+        "amber_high": null,
+        "red_high": null,
+        "red_high_note": null,
+        "verification_status": "requires_clinical_review",
+        "citation_ids": ["IMEWS-UNVERIFIED"]
+      },
+      {
+        "parameter": "temperature_celsius",
+        "red_low": 35.0,
+        "amber_low": [35.0, 35.9],
+        "amber_high": [38.0, 38.4],
+        "red_high": 38.5,
+        "red_high_note": "Fever postpartum raises sepsis concern (maternal sepsis module); hypothermia worsens coagulopathy in hemorrhage — active warming.",
+        "verification_status": "requires_clinical_review",
+        "citation_ids": ["IMEWS-UNVERIFIED"]
+      },
+      {
+        "parameter": "urine_output_ml_per_kg_per_h",
+        "red_low": 0.5,
+        "amber_low": null,
+        "amber_high": null,
+        "red_high": null,
+        "red_high_note": "Oliguria < 0.5 mL/kg/h indicates inadequate perfusion; a resuscitation target and a sepsis/AKI warning sign.",
+        "verification_status": "verified (resuscitation target consistent with FIGO 2022 section 11 / RCOG resuscitation guidance)",
+        "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+      },
+      {
+        "parameter": "mental_status",
+        "values": ["alert", "voice_responsive", "pain_responsive", "unresponsive"],
+        "red_values": ["pain_responsive", "unresponsive"],
+        "amber_values": ["voice_responsive", "new_confusion_or_agitation", "dizziness_or_syncope_reported"],
+        "red_high_note": "Altered mental status in PPH = end-organ hypoperfusion; escalates severity regardless of measured blood loss.",
+        "verification_status": "verified (concept) / band mapping requires chart confirmation",
+        "citation_ids": ["FIGO-2022-PPH", "ACOG-2017-PB183"]
+      }
+    ]
+  },
+  "blood_loss_bands": {
+    "note": "Volume bands interpret cumulative measured/estimated loss; physiologic bands (shock index) always override low volume estimates because visual estimation underestimates.",
+    "bands": [
+      {"band": "below_pph_threshold", "vaginal_ml": [null, 500], "cesarean_ml": [null, 1000], "action": "routine postpartum surveillance", "citation_ids": ["WHO-2012-PPH"]},
+      {"band": "pph", "vaginal_ml": [500, 1000], "cesarean_ml": [1000, null], "action": "activate PPH pathway — first-response bundle", "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]},
+      {"band": "severe_pph", "any_route_ml": [1000, null], "action": "severe PPH protocol: full first-response bundle, prepare refractory measures, anticipate transfusion and escalation", "citation_ids": ["WHO-2012-PPH", "RCOG-2016-GT52"]},
+      {"band": "massive_ongoing", "any_route_ml": [1500, null], "action": "anticipate coagulopathy; massive transfusion capability and surgical escalation required", "citation_ids": ["RCOG-2016-GT52", "FIGO-2022-PPH"]}
+    ],
+    "rule_of_30": {
+      "text": "Approximate 30% blood-volume loss markers (hemorrhage severity heuristic): fall of 30 mmHg systolic BP, rise of 30 beats/min pulse, fall of 30% hematocrit, fall of ~3 g/dL hemoglobin (~30%).",
+      "verification_status": "verified",
+      "citation_ids": ["FIGO-2022-PPH"]
+    }
+  },
+  "escalation_thresholds": [
+    {
+      "id": "esc-community-transfer",
+      "trigger": "shock_index >= 0.9 AND setting in [community, home_birth, phc_without_transfusion]",
+      "action": "urgent transfer alert to receiving facility; begin first-response measures concurrently",
+      "verification_status": "verified",
+      "citation_ids": ["FIGO-2022-PPH", "NATHAN-2015-BJOG"]
+    },
+    {
+      "id": "esc-critical-shock",
+      "trigger": "shock_index >= 1.3 OR (systolic_bp_mmHg < 90 AND heart_rate_bpm > 120) OR mental_status in [pain_responsive, unresponsive] attributable to hypovolemia",
+      "action": "immediate transfer to surgical/transfusion-capable facility with NASG/compression temporizing measures and ongoing resuscitation en route",
+      "verification_status": "verified",
+      "citation_ids": ["FIGO-2022-PPH", "NATHAN-2019-AOGS"]
+    },
+    {
+      "id": "esc-refractory-bundle",
+      "trigger": "bleeding continues 15-30 minutes after first-response bundle completed",
+      "action": "activate refractory-PPH bundle (bimanual/aortic compression, balloon tamponade, NASG, second TXA dose, continued uterotonic infusion); summon senior clinician",
+      "verification_status": "verified",
+      "citation_ids": ["ALTHABE-2020-BUNDLE", "FIGO-2022-PPH"]
+    },
+    {
+      "id": "esc-resource-gap",
+      "trigger": "required resource unavailable (uterotonics / blood / surgical capability) with ongoing PPH",
+      "action": "temporize and transfer; never delay transfer waiting for deterioration; document resource gap in referral note",
+      "verification_status": "verified",
+      "citation_ids": ["FIGO-2022-PPH"]
+    },
+    {
+      "id": "esc-ergot-block",
+      "trigger": "systolic_bp_mmHg >= 140 OR diastolic_bp_mmHg >= 90 OR documented hypertensive disorder, AND second-line uterotonic being considered",
+      "action": "hard-block ergometrine / oxytocin-ergometrine; offer misoprostol alternative; flag preeclampsia pathway evaluation",
+      "verification_status": "verified",
+      "citation_ids": ["WHO-2012-PPH", "WHO-2018-UTEROTONICS", "FIGO-2022-PPH"]
+    }
+  ],
+  "missing_information_policy": {
+    "rule": "The engine never imputes missing vitals, weights, times, or contraindication fields. Missing critical fields produce an explicit missing-information list and the fail-safe default: treat as higher acuity until data arrive, with drug recommendations gated per medications.v1.json contraindication rules.",
+    "critical_fields": ["heart_rate_bpm", "systolic_bp_mmHg", "bleeding_status", "time_of_birth (for TXA window)", "uterine_tone", "bp_before_ergot_alkaloids", "asthma_status_before_carboprost"]
+  },
+  "citations": {
+    "FIGO-2022-PPH": {
+      "organization": "International Federation of Gynecology and Obstetrics",
+      "title": "FIGO recommendations on the management of postpartum hemorrhage 2022",
+      "year": 2022,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9313855/",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2012-PPH": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations for the prevention and treatment of postpartum haemorrhage",
+      "year": 2012,
+      "url": "https://iris.who.int/bitstream/handle/10665/75411/9789241548502_eng.pdf?sequence=1",
+      "date_reviewed": "2026-08-11"
+    },
+    "WHO-2018-UTEROTONICS": {
+      "organization": "World Health Organization",
+      "title": "WHO recommendations: uterotonics for the prevention of postpartum haemorrhage",
+      "year": 2018,
+      "url": "https://iris.who.int/handle/10665/277276",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2015-BJOG": {
+      "organization": "Nathan HL et al.",
+      "title": "Shock index: an effective predictor of outcome in postpartum haemorrhage? BJOG 2015;122:268-275",
+      "year": 2015,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/25546050/",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2018-BMJINNOV": {
+      "organization": "Nathan HL et al.",
+      "title": "Development and evaluation of a novel Vital Signs Alert device for use in pregnancy in low-resource settings. BMJ Innovations 2018;4:192-198",
+      "year": 2018,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30397523/",
+      "date_reviewed": "2026-08-11"
+    },
+    "NATHAN-2019-AOGS": {
+      "organization": "Nathan HL et al.",
+      "title": "Shock index thresholds to predict adverse outcomes in maternal hemorrhage and sepsis: a prospective cohort study. Acta Obstet Gynecol Scand 2019;98:1178-1186",
+      "year": 2019,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30927469/",
+      "date_reviewed": "2026-08-11"
+    },
+    "RCOG-2016-GT52": {
+      "organization": "Royal College of Obstetricians and Gynaecologists",
+      "title": "Prevention and management of postpartum haemorrhage. Green-top Guideline No. 52 (BJOG 2017;124:e106-e149)",
+      "year": 2016,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27981719/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ACOG-2017-PB183": {
+      "organization": "American College of Obstetricians and Gynecologists",
+      "title": "ACOG Practice Bulletin No. 183: Postpartum Hemorrhage",
+      "year": 2017,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/28937571/",
+      "date_reviewed": "2026-08-11"
+    },
+    "ALTHABE-2020-BUNDLE": {
+      "organization": "WHO technical consultation (Althabe F et al.)",
+      "title": "Postpartum hemorrhage care bundles to improve adherence to guidelines: a WHO technical consultation. Int J Gynaecol Obstet 2020;148:290-299",
+      "year": 2020,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31222831/",
+      "date_reviewed": "2026-08-11"
+    },
+    "IMEWS-UNVERIFIED": {
+      "organization": "National Clinical Effectiveness Committee (Ireland) / MEOWS literature",
+      "title": "Irish Maternity Early Warning System (IMEWS) observation chart — exact amber/red band values NOT retrieved during authoring; bands in vital_sign_danger_ranges marked 'requires_clinical_review' must be confirmed against the deployment site's national maternity early-warning chart before pilot",
+      "year": null,
+      "url": null,
+      "date_reviewed": "2026-08-11"
+    }
+  }
+}

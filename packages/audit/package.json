@@ -1,0 +1,19 @@
+{
+  "name": "@mamasafe/audit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MamaSafe tamper-evident append-only audit log (hash-chained, SHA-256). Browser (IndexedDB) and Node (memory/file).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "idb": "^8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
+  }
+}

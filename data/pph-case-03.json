@@ -1,0 +1,136 @@
+{
+  "case_id": "pph-case-03",
+  "synthetic": true,
+  "title": "Critical PPH in a remote setting — no blood products, no balloon kit, 3-hour referral, no TXA in stock",
+  "scenario_note": "Severe case with limited resources: remote PHC, no blood products, no balloon tamponade kit, TXA not stocked, 3-hour transport to referral. Tests resource-tier adaptation (community/phc rules), aggressive temporizing measures (NASG, bimanual/aortic compression), immediate transfer with documentation of resource gaps, and correct handling when TXA is unavailable (do not fabricate it — escalate without it). SYNTHETIC DATA ONLY.",
+  "input": {
+    "patient": {
+      "age_years": 34,
+      "parity": 5,
+      "gestational_age_weeks": 37,
+      "postpartum": true,
+      "mode_of_birth": "vaginal",
+      "minutes_since_birth": 70,
+      "weight_kg": 60
+    },
+    "vitals": {
+      "heart_rate_bpm": 136,
+      "systolic_bp_mmHg": 78,
+      "diastolic_bp_mmHg": 44,
+      "respiratory_rate_per_min": 30,
+      "spo2_percent": 93,
+      "temperature_celsius": 35.9,
+      "mental_status": "drowsy, responds to voice"
+    },
+    "bleeding": {
+      "ongoing": true,
+      "estimated_blood_loss_ml": 1800,
+      "bleeding_character": "heavy continuous flow with clots",
+      "uterine_tone": "boggy, not responding to massage",
+      "placenta_delivered": true,
+      "placenta_appears_complete": false,
+      "visible_lacerations": "not inspected — no trained staff for repair on site"
+    },
+    "obstetric_history": {
+      "hypertensive_disorder": false,
+      "asthma": false,
+      "previous_pph": true,
+      "anticoagulants": false
+    },
+    "medications_already_given": [
+      {"medication": "misoprostol", "dose": "600 µg", "route": "oral", "minutes_ago": 65, "context": "pph_prevention_community"}
+    ],
+    "resources": {
+      "iv_access": [{"type": "peripheral", "gauge": 20, "site": "right hand", "patent": true}],
+      "medications_available": ["misoprostol"],
+      "medications_unavailable": ["oxytocin", "tranexamic_acid", "ergometrine", "carbetocin", "carboprost"],
+      "blood_products_available": false,
+      "nasg_available": true,
+      "balloon_tamponade_kit_available": false,
+      "facility_tier": "community_or_home_birth_no_iv",
+      "referral_minutes_away": 180,
+      "referral_facility_capability": "secondary hospital with surgery and blood bank"
+    },
+    "free_text_intake": "Grand multipara, delivered 70 minutes ago at the health post. Heavy bleeding, maybe 1.8 litres. Placenta may not be complete. Only misoprostol in stock, already gave 600 micrograms orally. No TXA, no oxytocin, no blood. Referral hospital 3 hours away by road."
+  },
+  "expected_outputs": {
+    "shock_index": {
+      "value": 1.74,
+      "computation": "136 / 78 = 1.744",
+      "band": "critical",
+      "citation_ids": ["NATHAN-2019-AOGS", "FIGO-2022-PPH"]
+    },
+    "risk_category": "severe_pph_hemorrhagic_shock_resource_limited",
+    "risk_rationale": [
+      "EBL ~1,800 mL = severe/massive PPH; anticipate coagulopathy (>= 1,500 mL ongoing)",
+      "Shock index 1.74 deep in critical band; SBP 78 with HR 136 = hemorrhagic shock",
+      "Altered mental status (drowsy) = end-organ hypoperfusion",
+      "Uterine atony unresponsive to massage + suspected retained products (incomplete placenta) — two 4T causes possible",
+      "Resource-limited setting: no TXA, no oxytocin, no blood products, 3-hour transport"
+    ],
+    "red_flags": [
+      "shock_index_critical_1.74",
+      "massive_ebl_1800ml_ongoing",
+      "systolic_bp_below_80",
+      "altered_mental_status_drowsy",
+      "suspected_retained_products",
+      "atony_unresponsive_to_massage",
+      "no_oxytocin_available",
+      "no_tranexamic_acid_available",
+      "no_blood_products_available",
+      "referral_180_minutes_away",
+      "grand_multiparity_previous_pph"
+    ],
+    "missing_info": [
+      "genital_tract_trauma_assessment (not inspected; no staff to repair — document gap for receiving facility)",
+      "urine_output (perfusion baseline)",
+      "second_iv_access (current access is 20G only — inadequate for rapid resuscitation)",
+      "hemoglobin_coagulation_status (unavailable on site)"
+    ],
+    "first_5_prioritized_actions": [
+      {
+        "rank": 1,
+        "action_id": "call_for_help",
+        "action": "Activate emergency transfer IMMEDIATELY: call referral hospital, dispatch vehicle now (3-hour journey = part of treatment timeline); alert receiving team to prepare blood and theatre.",
+        "citation_ids": ["FIGO-2022-PPH", "RCOG-2016-GT52"]
+      },
+      {
+        "rank": 2,
+        "action_id": "temporizing_measures",
+        "action": "Continuous bimanual uterine compression (or external aortic compression) and apply NASG now — uterus boggy and unresponsive to massage; these are the recommended temporizing measures until definitive care.",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH", "FIGO-2015-NASG"]
+      },
+      {
+        "rank": 3,
+        "action_id": "uterotonic_second_line",
+        "action": "Second-line uterotonic from available stock: misoprostol 800 µg SUBLINGUAL — NOTE: patient already received 600 µg oral prophylactic misoprostol; FIGO 2022 reports NO EVIDENCE for an additional 800 µg in this situation — flag for clinician decision; no other uterotonic is in stock, so prioritize mechanical measures and transfer.",
+        "medication_ref": "misoprostol",
+        "flag": "misoprostol_redose_no_evidence",
+        "citation_ids": ["FIGO-2022-PPH", "WHO-2012-PPH"]
+      },
+      {
+        "rank": 4,
+        "action_id": "iv_access_and_fluids",
+        "action": "Upsize/secure IV access (largest available cannula, second line if possible) and run isotonic crystalloid; warm the patient (temp 35.9 C — hypothermia worsens coagulopathy).",
+        "citation_ids": ["WHO-2012-PPH", "FIGO-2022-PPH"]
+      },
+      {
+        "rank": 5,
+        "action_id": "escalate_definitive_care",
+        "action": "Depart with resuscitation ongoing: NASG on, compression maintained, document resource gaps (no oxytocin, no TXA, no blood, no balloon kit) in the referral note so the receiving team prepares balloon tamponade/surgery/blood on arrival. Do NOT delay departure waiting for drugs that do not exist on site.",
+        "citation_ids": ["FIGO-2022-PPH"]
+      }
+    ],
+    "blocked_or_flagged": [
+      {"item": "tranexamic_acid", "status": "unavailable_on_site", "note": "Engine must NOT recommend or fabricate unavailable drugs; document 'TXA unavailable' and flag for administration at earliest point en route / on arrival (still inside 3-h window if reachable in time)."},
+      {"item": "oxytocin", "status": "unavailable_on_site", "note": "First-line uterotonic unavailable — engine adapts per resource_tier_adaptations.community_or_home_birth_no_iv."},
+      {"item": "misoprostol_additional_800ug", "status": "flag_no_evidence", "note": "600 µg prophylactic already given; FIGO 2022: no evidence for additional 800 µg SL — clinician decision, not engine default."},
+      {"item": "uterine_balloon_tamponade", "status": "unavailable_on_site", "note": "No kit; receiving facility should prepare UBT/surgical options."}
+    ],
+    "escalation_expected": {
+      "trigger_id": "esc-resource-gap",
+      "action": "Immediate transfer despite 3-hour journey: resource gap with ongoing PPH — temporize (NASG + compression) and transfer; never wait for deterioration. Receiving facility pre-alerted for blood, balloon tamponade, surgery, and manual removal of suspected retained placenta.",
+      "citation_ids": ["FIGO-2022-PPH"]
+    }
+  }
+}
