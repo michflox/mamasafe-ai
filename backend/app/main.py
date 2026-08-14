@@ -1,9 +1,12 @@
 """
 MamaSafe AI — FastAPI Application
+Serves both API and frontend static files
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from fastapi.staticfiles import StaticFiles
+import os
+
 from .api.routes import router
 
 app = FastAPI(
@@ -22,19 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API routes
 app.include_router(router)
 
-@app.get("/")
-async def root():
-    return {
-        "name": "MamaSafe AI",
-        "version": "0.1.0-alpha",
-        "status": "operational",
-        "mode": "online",
-        "disclaimer": "Clinical decision support only. Requires human confirmation for all actions."
-    }
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "version": "0.1.0-alpha", "timestamp": datetime.utcnow().isoformat(), "mode": "online"}
+# Serve frontend static files from frontend/dist
+dist_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.exists(dist_path) and os.path.exists(os.path.join(dist_path, "index.html")):
+    app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
