@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from datetime import datetime
 import os
 
 from .api.routes import router
@@ -46,6 +47,11 @@ assets_path = os.path.join(dist_path, "assets")
 if os.path.exists(assets_path):
     app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
 
+# Root health endpoint for Render and status checks
+@app.get("/health")
+async def root_health():
+    return {"status": "healthy", "version": "0.1.0-alpha", "timestamp": datetime.utcnow().isoformat(), "mode": "online"}
+
 # Serve index.html at root
 @app.get("/")
 async def serve_index():
@@ -57,8 +63,8 @@ async def serve_index():
 # Catch-all for SPA routing (serves index.html for any non-API path)
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
-    # Don't intercept API routes
-    if full_path.startswith("api/"):
+    # Don't intercept API routes or health checks
+    if full_path.startswith("api/") or full_path == "health":
         return {"detail": "Not Found"}
     index_file = os.path.join(dist_path, "index.html")
     if os.path.exists(index_file):
