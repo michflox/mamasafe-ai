@@ -25,10 +25,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API routes
 app.include_router(router)
 
-# Serve frontend static files from frontend/dist
-dist_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+# Serve frontend static files
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+dist_path = os.path.join(project_root, "frontend", "dist")
+
 if os.path.exists(dist_path) and os.path.exists(os.path.join(dist_path, "index.html")):
     app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
